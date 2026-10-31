@@ -56,11 +56,11 @@
 
 <% if @mailboxes.none? %>
   <%= render "shared/empty", line: "Tout commence par une boîte." do %><%= link_to "Connecte une boîte", mailboxes_path %> pour recevoir ton courrier ici.<% end %>
-<% elsif @conversations.none? %>
+<% elsif @conversations.none? && Array(@assigned).none? %>
   <%= render "shared/empty", line: space_empty_line(@archived ? "archived" : @stack || @box) %>
 <% end %>
 
-<% if @conversations.any? %>
+<% if @conversations.any? || Array(@assigned).any? %>
   <%= form_with url: bulk_conversations_path, id: "bulk", class: "bulk", data: { action: "submit->shortcuts#leave" } do |f| %>
     <span class="muted">Les fils cochés :</span>
     <% unless @archived %><%= f.button "Archiver", name: "operation", value: "archive", class: "link", data: { shortcut: "e", shortcut_bulk: true } %><% end %>
@@ -74,27 +74,30 @@
   <% end %>
 <% end %>
 
-<%# Dans la réception, comme chez Hey : ce qui est nouveau pour moi d'abord, puis ce que j'ai déjà vu. %>
+<%# Dans la réception, comme chez Hey : ce qui est nouveau pour moi d'abord, puis ce que j'ai déjà vu.
+    Au-dessus, les fils qu'on m'a assignés, tant que je ne les ai pas archivés. %>
+<% assigned = Array(@assigned) %>
 <% sections = if @box == "imbox" && !@stack && !@archived && params[:unread] != "1"
      fresh, seen = @conversations.partition(&:unread_anywhere?)
-     [ [ ("Nouveaux messages" if fresh.any?), fresh ], [ ("Déjà vu" if fresh.any?), seen ] ]
+     [ [ ("Assignés à moi" if assigned.any?), assigned, "assigned" ], [ ("Nouveaux messages" if fresh.any?), fresh, "fresh" ],
+       [ ("Déjà vu" if fresh.any? || assigned.any?), seen, "seen" ] ]
    else
-     [ [ nil, @conversations ] ]
+     [ [ nil, @conversations, nil ] ]
    end %>
 <div data-controller="viewer">
-  <% if sections.size > 1 && sections.first.last.none? && @conversations.any? && params[:before].blank? %>
-    <p class="list-section-note">Rien de nouveau depuis ta dernière visite.</p>
-  <% end %>
-  <% sections.each do |heading, conversations| %>
+  <% sections.each do |heading, conversations, kind| %>
+    <% if kind == "fresh" && conversations.none? && @conversations.any? && params[:before].blank? %>
+      <p class="list-section-note">Rien de nouveau depuis ta dernière visite.</p>
+    <% end %>
     <% next if conversations.none? %>
-    <%= tag.h2(heading, class: [ "list-section", ("seen" if heading == "Déjà vu") ]) if heading %>
-    <table class="conversations<%= " seen" if heading == "Déjà vu" %>">
+    <%= tag.h2(heading, class: [ "list-section", kind ]) if heading %>
+    <table class="conversations<%= " seen" if kind == "seen" && heading %>">
       <% conversations.each do |conversation| %>
         <%= render conversation, show_mailbox: !(@mailbox || @mailboxes.one?), selectable: true, swipe: (@stack ? :archive : :both unless @archived) %>
       <% end %>
     </table>
   <% end %>
-  <%= render "attachments/viewer" if @conversations.any? %>
+  <%= render "attachments/viewer" if @conversations.any? || Array(@assigned).any? %>
 </div>
 
 <% if @conversations.size == ConversationsController::PER_PAGE && @conversations.last.last_message_at %>

@@ -13,9 +13,16 @@ class ConversationsController < ApplicationController
     @box = params[:box].presence_in(Screening::BUCKETS) || "imbox"
     @mailboxes = Mailbox.accessible_by(Current.user).by_display_name
     @mailbox = @mailboxes.find(params[:mailbox_id]) if params[:mailbox_id].present?
-    @conversations = page(filtered_conversations)
-    Conversation.load_twins(@conversations, Current.user) unless @mailbox
-    Conversation.load_attachments(@conversations)
+    scope = filtered_conversations
+    if pins_assigned?
+      mine = scope.assigned_to(Current.user)
+      @assigned = one_per_email(mine).recent.limit(PER_PAGE).to_a if params[:before].blank?
+      scope = scope.where("#{Conversation::TWIN_KEY} NOT IN (#{mine.unscope(:select, :includes).select(Arel.sql(Conversation::TWIN_KEY)).to_sql})")
+    end
+    @conversations = page(one_per_email(scope))
+    listed = @conversations + Array(@assigned)
+    Conversation.load_twins(listed, Current.user) unless @mailbox
+    Conversation.load_attachments(listed)
     @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).one_per_email.count } unless @stack || @archived
   end
 
@@ -132,7 +139,15 @@ class ConversationsController < ApplicationController
     end
     scope = scope.assigned_to(Current.user) if params[:mine] == "1"
     scope = scope.unread_for(Current.user) if params[:unread] == "1"
-    @mailbox ? scope : scope.one_per_email
+    scope
+  end
+
+  def one_per_email(scope) = @mailbox ? scope : scope.one_per_email
+
+  # Dans la réception, les fils qu'on m'a assignés restent en tête, même anciens, tant que je ne les ai pas
+  # archivés : sinon ils disparaissent sous le courrier du jour et on les croit perdus.
+  def pins_assigned?
+    @box == "imbox" && !@stack && !@archived && params[:mine] != "1" && params[:unread] != "1"
   end
 
   # Pagination par date : ?before=<horodatage du dernier fil affiché>.
