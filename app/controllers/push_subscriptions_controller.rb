@@ -23,7 +23,8 @@ class PushSubscriptionsController < ApplicationController
       subscription.deliver(title: "SG Mail", body: "Les notifications fonctionnent sur cet appareil.", url: push_subscriptions_path, tag: "test")
     end
     if delivered.any?
-      redirect_to push_subscriptions_path, notice: "Notification envoyée à #{delivered.count(true)} appareil(s)."
+      count = delivered.count(true)
+      redirect_to push_subscriptions_path, notice: count > 1 ? "Notification envoyée sur tes #{count} appareils." : "Notification envoyée sur ton appareil."
     else
       redirect_to push_subscriptions_path, alert: "Aucun appareil n'est abonné pour l'instant."
     end
