@@ -24,3 +24,10 @@ document.addEventListener("turbo:load", () => {
   if (!navigator.setAppBadge || Number.isNaN(count) || document.body.dataset.badge === undefined) return
   ;(count > 0 ? navigator.setAppBadge(count) : navigator.clearAppBadge()).catch(() => {})
 })
+
+// Un menu déroulant (réglages, client) se referme d'un clic ailleurs : la page floutée derrière invite à toucher à côté.
+document.addEventListener("click", (event) => {
+  document.querySelectorAll("details.settings[open], details.account-switcher[open]").forEach((details) => {
+    if (!details.contains(event.target)) details.open = false
+  })
+})
