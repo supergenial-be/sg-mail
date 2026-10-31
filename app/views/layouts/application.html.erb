@@ -30,11 +30,18 @@
   <body data-controller="shortcuts" data-space="<%= current_space %>" class="<%= authenticated? ? "with-sidebar" : "bare" %>"
     <%= tag.attributes(data: { badge: imbox_unread_count }) if Current.account %>>
     <% if authenticated? %>
-      <aside class="sidebar" data-controller="toggle" data-action="click@window->toggle#outside keydown.esc@window->toggle#close">
+      <aside class="sidebar" data-controller="toggle" data-action="click@window->toggle#outside keydown.esc@window->toggle#close turbo:before-cache@document->toggle#close">
         <%# Sur téléphone, les espaces et les boîtes restent rangés derrière ce bouton, pour laisser la place aux emails. %>
         <button type="button" class="menu-toggle" data-toggle-target="button" data-action="toggle#toggle" aria-expanded="false" aria-controls="spaces-menu" aria-label="Menu">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
+        <% if Current.account %>
+          <%= link_to new_draft_path, class: [ "compose-button", "hint", ("floating" if list_page?) ], data: { shortcut: "c" } do %>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16l-4 1 1-4 9.5-9.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Écrire
+          <% end %>
+        <% end %>
+        <%# Le tiroir : glisse depuis la gauche sur téléphone ; sur ordinateur, ses éléments restent dans la barre latérale. %>
+        <div class="drawer" id="spaces-menu">
         <div class="brand">
           <%= link_to Current.account ? account_root_path : root_path, class: "brand-name" do %><span class="mark" aria-hidden="true"></span>SG Mail<% end %>
           <% if Current.account && (Current.user.accounts.many? || Current.user.staff?) %>
@@ -52,10 +59,7 @@
           <% end %>
         </div>
         <% if Current.account %>
-          <%= link_to new_draft_path, class: [ "compose-button", "hint", ("floating" if list_page?) ], data: { shortcut: "c" } do %>
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16l-4 1 1-4 9.5-9.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Écrire
-          <% end %>
-          <nav class="spaces" id="spaces-menu" aria-label="Espaces">
+          <nav class="spaces" aria-label="Espaces">
             <%= nav_link "Réception", account_root_path, shortcut: "g i", space: "imbox", current: imbox_mailbox_page? %>
             <% if sidebar_mailboxes.many? %>
               <div class="sub-spaces" role="group" aria-label="Réception par boîte">
@@ -74,6 +78,10 @@
               <% sidebar_agent = Agent.for(Current.user) %><%= nav_link sidebar_agent.name, agent_chats_path, shortcut: "g a", space: sidebar_agent.color %>
             <% end %>
           </nav>
+        <% end %>
+        </div>
+        <div class="drawer-backdrop" data-action="click->toggle#close" aria-hidden="true"></div>
+        <% if Current.account %>
           <% unless controller_name == "searches" %>
             <%= form_with url: search_path, method: :get, class: "search",
                   data: { controller: "search", action: "keydown->search#keydown focusout->search#leave" } do |f| %>
