@@ -39,6 +39,7 @@ class AgentTest < ActionDispatch::IntegrationTest
     assert_equal 3500, @semisto.agent_monthly_budget_cents
     get conversation_path(@conversation, account_id: @semisto.id)
     assert_select "#agent h2", "Plume"
+    assert_select "#agent .agent-tools li", text: /SG Mail/
   end
 
   test "each person names and colours their own agent" do

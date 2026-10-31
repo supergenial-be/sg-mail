@@ -122,6 +122,24 @@ class IntegrationsTest < ActionDispatch::IntegrationTest
     assert_equal "idle", chat.reload.status
   end
 
+  test "a new discussion lists the tools: connected ones with the account, the others to connect" do
+    connect(users(:michael))
+    with_account(@semisto) { Integration.create!(name: "Claudy", mcp_url: "https://claudy.test/mcp") }
+    @semisto.update!(agent_enabled: true)
+    conversation = with_account(@semisto) do
+      mailbox = Mailbox.create!(provider: "gmail", address: "admin@semisto.org")
+      mailbox.grant!(users(:michael), "read")
+      mailbox.messages.create!(provider_uid: "x", thread_key: "tx", subject: "Hello", from_address: "a@example.org", sent_at: 1.hour.ago, labels: %w[INBOX])
+      Conversation.rebuild_for(mailbox)
+      Conversation.sole
+    end
+    sign_in_as users(:michael)
+    get conversation_path(conversation, account_id: @semisto.id)
+    assert_select "#agent .agent-tools li", 3
+    assert_select "#agent .agent-tools li", text: /My Semisto\s*· connecté en tant que m.hulet@semisto.org/
+    assert_select "#agent .agent-tools li a[href=?]", integrations_path(account_id: @semisto.id), text: "à connecter"
+  end
+
   test "a revoked account is reported to the agent and shown as disconnected" do
     connection = connect(users(:michael))
     @server.expired = true
