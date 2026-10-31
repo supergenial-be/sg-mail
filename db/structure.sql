@@ -84,7 +84,8 @@ CREATE TABLE public.accounts (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     agent_enabled boolean DEFAULT false NOT NULL,
-    agent_monthly_budget_cents integer DEFAULT 2000 NOT NULL
+    agent_monthly_budget_cents integer DEFAULT 2000 NOT NULL,
+    color character varying
 );
 
 
@@ -4144,6 +4145,7 @@ ALTER TABLE public.screenings ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261031230000'),
 ('20261030230000'),
 ('20261030180000'),
 ('20261030170000'),

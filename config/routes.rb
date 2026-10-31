@@ -60,6 +60,7 @@ Rails.application.routes.draw do
     end
     resources :memberships, only: %i[index update destroy]
     resource :sharing, only: %i[show update], path: "partage"
+    resource :account_settings, only: %i[show update], path: "client"
     resources :invitations, only: %i[create destroy]
     resources :api_tokens, only: %i[index create destroy]
     resources :access_logs, only: :index, path: "journal"

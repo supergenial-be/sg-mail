@@ -24,6 +24,12 @@ module ApplicationHelper
       style: ("--c: var(--#{space})" if space)
   end
 
+  # La pastille de couleur d'un client (un rond vide s'il n'en a pas, pour garder les noms alignés).
+  def account_dot(account)
+    palette = account.color_palette
+    tag.span(class: [ "client-dot", ("none" unless palette) ], style: ("--client: #{palette[:dot]}" if palette), aria: { hidden: true })
+  end
+
   # Les boîtes auxquelles j'ai accès, sous « Réception » dans la barre latérale.
   def sidebar_mailboxes
     @sidebar_mailboxes ||= Mailbox.accessible_by(Current.user).by_display_name.to_a
