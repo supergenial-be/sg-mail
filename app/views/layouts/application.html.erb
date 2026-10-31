@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SG Mail">
-    <meta name="theme-color" content="#f7f3ea" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#17111f" media="(prefers-color-scheme: dark)">
+    <%# Sur téléphone, la barre du navigateur prend la teinte du client, comme l'en-tête. %>
+    <meta name="theme-color" content="<%= Current.account&.color_palette&.dig(:light) || "#f7f3ea" %>" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="<%= Current.account&.color_palette&.dig(:dark) || "#17111f" %>" media="(prefers-color-scheme: dark)">
     <meta name="application-name" content="SG Mail">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
@@ -28,7 +29,7 @@
   </head>
 
   <body data-controller="shortcuts" data-space="<%= current_space %>" class="<%= authenticated? ? "with-sidebar" : "bare" %>"
-    <%= tag.attributes(data: { badge: imbox_unread_count }) if Current.account %>>
+    <%= tag.attributes(data: { badge: imbox_unread_count, client: Current.account.color }, style: Current.account.color_style) if Current.account %>>
     <% if authenticated? %>
       <aside class="sidebar" data-controller="toggle" data-action="click@window->toggle#outside keydown.esc@window->toggle#close turbo:before-cache@document->toggle#close">
         <%# Sur téléphone, les espaces et les boîtes restent rangés derrière ce bouton, pour laisser la place aux emails. %>
@@ -46,16 +47,16 @@
           <%= link_to Current.account ? account_root_path : root_path, class: "brand-name" do %><span class="mark" aria-hidden="true"></span>SG Mail<% end %>
           <% if Current.account && (Current.user.accounts.many? || Current.user.staff?) %>
             <details class="account-switcher">
-              <summary data-shortcut="g c" title="Changer de client (g puis c)"><span class="account"><%= Current.account.name %></span></summary>
+              <summary data-shortcut="g c" title="Changer de client (g puis c)"><%= account_dot(Current.account) %><span class="account"><%= Current.account.name %></span></summary>
               <nav aria-label="Clients">
                 <% Current.user.accounts.order(:name).each do |account| %>
-                  <%= link_to account.name, account_root_path(account_id: account.id), aria: { current: (account == Current.account) || nil } %>
+                  <%= link_to safe_join([ account_dot(account), account.name ]), account_root_path(account_id: account.id), aria: { current: (account == Current.account) || nil } %>
                 <% end %>
                 <%= link_to "Tous les clients", accounts_path(account_id: nil), class: "all" %>
               </nav>
             </details>
           <% elsif Current.account %>
-            <span class="account"><%= Current.account.name %></span>
+            <span class="account"><%= account_dot(Current.account) %><%= Current.account.name %></span>
           <% end %>
         </div>
         <% if Current.account %>
@@ -96,6 +97,7 @@
           <summary><%= avatar(Current.user.display_name, size: "small") %><span class="name"><%= Current.user.display_name %></span></summary>
           <nav aria-label="Réglages">
             <% if Current.account %>
+              <%= nav_link "Client", account_settings_path %>
               <%= nav_link "Boîtes", mailboxes_path %>
               <%= nav_link "Partage", sharing_path %>
               <%= nav_link "Membres", memberships_path %>

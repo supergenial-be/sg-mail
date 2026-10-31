@@ -1,0 +1,31 @@
+<% content_for :title, "Client · SG Mail" %>
+<h1>Client <span class="muted">· <%= current_account.name %></span></h1>
+
+<section class="card">
+  <% if current_membership.admin? %>
+    <%= render "shared/errors", record: current_account %>
+    <%= form_with model: current_account, url: account_settings_path, method: :patch, class: "stacked" do |f| %>
+      <%= f.label :name, "Nom du client" %>
+      <%= f.text_field :name, required: true %>
+
+      <fieldset class="swatches client-swatches">
+        <legend>Couleur</legend>
+        <p class="muted">Elle teinte la barre latérale (le menu sur téléphone) de tous les membres, pour savoir d'un coup d'œil chez quel client on est.</p>
+        <label class="swatch none">
+          <%= f.radio_button :color, "", checked: current_account.color.nil? %><span class="dot" aria-hidden="true"></span>Aucune
+        </label>
+        <% Account::COLORS.each do |key, palette| %>
+          <label class="swatch" style="--agent: <%= palette[:dot] %>">
+            <%= f.radio_button :color, key %><span class="dot" aria-hidden="true"></span><%= palette[:label] %>
+          </label>
+        <% end %>
+      </fieldset>
+      <p><%= f.submit "Enregistrer" %></p>
+    <% end %>
+  <% else %>
+    <p>
+      Couleur : <strong><%= current_account.color_palette&.dig(:label) || "aucune" %></strong>.
+      Seuls les admins du client changent son nom et sa couleur.
+    </p>
+  <% end %>
+</section>
