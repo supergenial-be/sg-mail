@@ -1,6 +1,6 @@
 require "test_helper"
 
-# Glisser du doigt, palette ⌘K, « Répondre à la suite » et « Nouveau pour toi / Déjà vu ».
+# Glisser du doigt, palette ⌘K, « Répondre à la suite » et « Nouveaux messages / Déjà vu ».
 class InboxFlowTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
 
@@ -37,6 +37,14 @@ class InboxFlowTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-controller=swipe]", count: 0
   end
 
+  test "on a phone, spaces and mailboxes sit behind the menu button, and Filtrer beside the space title" do
+    get account_root_path(account_id: @semisto.id)
+    assert_select "aside.sidebar[data-controller=toggle] button.menu-toggle[aria-controls=spaces-menu][aria-expanded=false]"
+    assert_select "nav#spaces-menu a", "Feed"
+    assert_select ".space-top .space-head h1", "Réception"
+    assert_select ".space-top .filter-bar button.filter-toggle"
+  end
+
   test "the palette is on every page of an account, with its extra entries" do
     get account_root_path(account_id: @semisto.id)
     assert_select "dialog.palette input[data-palette-target=input]"
@@ -48,6 +56,7 @@ class InboxFlowTest < ActionDispatch::IntegrationTest
     get conversation_path(@facture, account_id: @semisto.id) # lu
     get account_root_path(account_id: @semisto.id)
     assert_select "h2.list-section", 2
+    assert_select "h2.list-section:not(.seen)", "Nouveaux messages"
     assert_select "h2.list-section:not(.seen) + table a", "Inscription"
     assert_select "h2.list-section.seen + table a", "Facture"
 
