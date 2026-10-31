@@ -115,7 +115,8 @@
       <%= render "shared/flourish", kind: kind, count: flash[:flourish_count] %>
     <% end %>
     <% if notice %>
-      <div class="toast" role="status" data-controller="toast" <%= tag.attributes(data: { toast_delay_value: (Draft::UNDO_DELAY.in_milliseconds - 500).to_i }) if flash[:cancel_send] %>>
+      <div class="toast" role="status" data-controller="toast" data-action="click->toast#dismiss" <%= tag.attributes(data: { toast_delay_value: (Draft::UNDO_DELAY.in_milliseconds - 500).to_i }) if flash[:cancel_send] %>>
+        <span class="toast-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.5 10.4l3 3 6-6.8"/></svg></span>
         <p class="flash notice"><%= notice %></p>
         <% if flash[:cancel_send].present? %>
           <%= button_to "Annuler", cancel_draft_path(flash[:cancel_send]), class: "undo hint", data: { shortcut: "z" } %>
@@ -123,6 +124,7 @@
         <% if flash[:undo].present? %>
           <%= button_to "Annuler", bulk_conversations_path, params: { operation: "unarchive", ids: flash[:undo] }, class: "undo hint", data: { shortcut: "z" } %>
         <% end %>
+        <span class="toast-timer" aria-hidden="true"></span>
       </div>
     <% end %>
     <%= render "shared/shortcuts" if authenticated? %>
