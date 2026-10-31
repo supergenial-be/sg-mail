@@ -13,7 +13,19 @@ class Membership < ApplicationRecord
 
   scope :admins, -> { where(role: "admin") }
 
+  # Une visite de la Réception plus de 30 minutes après la précédente ouvre une nouvelle visite.
+  VISIT_GAP = 30.minutes
+
   def admin? = role == "admin"
+
+  # Retient que j'ouvre la Réception et rend le seuil des « Nouveaux messages » : ce qui est arrivé
+  # avant ma visite précédente, je l'ai déjà vu passer dans la liste, même sans l'ouvrir.
+  def visit_imbox!(now = Time.current)
+    attributes = { imbox_visited_at: now }
+    attributes[:imbox_seen_at] = imbox_visited_at if imbox_visited_at && imbox_visited_at < now - VISIT_GAP
+    update_columns(attributes)
+    imbox_seen_at || created_at
+  end
 
   def role_label = Membership.role_label(role)
 

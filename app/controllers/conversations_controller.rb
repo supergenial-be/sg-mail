@@ -16,6 +16,7 @@ class ConversationsController < ApplicationController
     @conversations = page(filtered_conversations)
     Conversation.load_twins(@conversations, Current.user) unless @mailbox
     Conversation.load_attachments(@conversations)
+    @seen_before = Current.membership.visit_imbox! if imbox_sections?
     @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).one_per_email.count } unless @stack || @archived
   end
 
@@ -112,7 +113,14 @@ class ConversationsController < ApplicationController
     redirect_to conversations_path(box: box, mailbox_id: params[:mailbox_id].presence), notice: "Tout est marqué comme lu."
   end
 
+  helper_method :imbox_sections?
+
   private
+
+  # La Réception se partage en « Nouveaux messages » et « Déjà vu », comme chez Hey.
+  def imbox_sections?
+    @box == "imbox" && !@stack && !@archived && params[:unread] != "1" && params[:before].blank?
+  end
 
   def set_conversation
     @conversation = Conversation.accessible_by(Current.user).find(params[:id])

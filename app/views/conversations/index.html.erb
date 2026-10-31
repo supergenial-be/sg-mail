@@ -74,15 +74,16 @@
   <% end %>
 <% end %>
 
-<%# Dans la réception, comme chez Hey : ce qui est nouveau pour moi d'abord, puis ce que j'ai déjà vu. %>
-<% sections = if @box == "imbox" && !@stack && !@archived && params[:unread] != "1"
-     fresh, seen = @conversations.partition(&:unread_anywhere?)
+<%# Dans la réception, comme chez Hey : ce qui est nouveau pour moi d'abord (non lu et arrivé depuis
+    ma visite précédente), puis ce que j'ai déjà vu passer, lu ou pas. %>
+<% sections = if imbox_sections?
+     fresh, seen = @conversations.partition { |c| c.unread_anywhere? && c.last_message_at && c.last_message_at > @seen_before }
      [ [ ("Nouveaux messages" if fresh.any?), fresh ], [ ("Déjà vu" if fresh.any?), seen ] ]
    else
      [ [ nil, @conversations ] ]
    end %>
 <div data-controller="viewer">
-  <% if sections.size > 1 && sections.first.last.none? && @conversations.any? && params[:before].blank? %>
+  <% if sections.size > 1 && sections.first.last.none? && @conversations.any? %>
     <p class="list-section-note">Rien de nouveau depuis ta dernière visite.</p>
   <% end %>
   <% sections.each do |heading, conversations| %>

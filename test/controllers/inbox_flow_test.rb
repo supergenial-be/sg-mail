@@ -54,6 +54,7 @@ class InboxFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "the inbox shows what is new first, then what I have already seen" do
+    memberships(:michael_semisto).update_columns(imbox_seen_at: 3.days.ago)
     get conversation_path(@facture, account_id: @semisto.id) # lu
     get account_root_path(account_id: @semisto.id)
     assert_select "h2.list-section", 2
@@ -66,6 +67,23 @@ class InboxFlowTest < ActionDispatch::IntegrationTest
     assert_select "h2.list-section", 0
     assert_select "p.list-section-note", "Rien de nouveau depuis ta dernière visite."
     assert_select "table.conversations a", "Inscription"
+  end
+
+  test "unread threads I already saw in a previous visit are no longer new" do
+    # Visite précédente il y a 36 heures : Anne (il y a 2 jours) était déjà là, Paul (il y a 1 jour) est arrivé après.
+    memberships(:michael_semisto).update_columns(imbox_seen_at: 3.days.ago, imbox_visited_at: 36.hours.ago)
+    get account_root_path(account_id: @semisto.id)
+    assert_select "h2.list-section:not(.seen) + table a", "Facture"
+    assert_select "h2.list-section.seen + table a", "Inscription"
+
+    # Pendant la même visite, rien ne bouge ; à la visite suivante, Paul est déjà vu à son tour.
+    get account_root_path(account_id: @semisto.id)
+    assert_select "h2.list-section:not(.seen) + table a", "Facture"
+    travel 1.hour do
+      get account_root_path(account_id: @semisto.id)
+      assert_select "h2.list-section", 0
+      assert_select "p.list-section-note", "Rien de nouveau depuis ta dernière visite."
+    end
   end
 
   test "reply one after the other, from the reply later stack" do

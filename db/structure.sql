@@ -778,7 +778,9 @@ CREATE TABLE public.memberships (
     user_id bigint NOT NULL,
     role character varying DEFAULT 'member'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    imbox_visited_at timestamp(6) without time zone,
+    imbox_seen_at timestamp(6) without time zone
 );
 
 
@@ -4144,6 +4146,7 @@ ALTER TABLE public.screenings ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261031230000'),
 ('20261030230000'),
 ('20261030180000'),
 ('20261030170000'),
