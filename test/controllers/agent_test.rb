@@ -104,6 +104,8 @@ class AgentTest < ActionDispatch::IntegrationTest
 
     get conversation_path(@conversation, account_id: @semisto.id)
     assert_select "#agent .agent-action.pending", text: /Ajouter une note interne/
+    assert_select ".agent-dock[data-controller=agent-drawer] button.agent-launcher.waiting[data-shortcut='.']"
+    assert_select "aside#agent.agent-drawer .agent-drawer-body .agent-transcript"
 
     perform_enqueued_jobs do
       patch agent_chat_agent_action_path(chat, write, account_id: @semisto.id), params: { decision: "confirm", from_conversation: "1" }

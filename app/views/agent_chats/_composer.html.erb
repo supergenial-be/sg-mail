@@ -1,7 +1,8 @@
 <%# Écrire à l'agent : dans une discussion existante (chat), ou en commencer une (depuis un fil : conversation). %>
 <% url = chat ? agent_chat_agent_messages_path(chat) : agent_chats_path %>
 <% busy = chat && (chat.running? || chat.waiting?) %>
-<%= form_with url: url, class: "agent-composer", data: { controller: "agent-composer" } do |f| %>
+<%= form_with url: url, class: "agent-composer", data: { controller: "agent-composer", action: "submit->agent-composer#clear",
+                                                       agent_composer_key_value: conversation ? "conversation-#{conversation.id}" : "chat-#{chat&.id}" } do |f| %>
   <%= hidden_field_tag :conversation_id, conversation.id if conversation && !chat %>
   <%= hidden_field_tag :from_conversation, "1" if conversation %>
   <% if conversation && !busy %>
@@ -13,6 +14,6 @@
   <% end %>
   <%= f.text_area :text, rows: 2, required: true, disabled: busy, aria: { label: "Message à #{agent.name}" },
         placeholder: busy ? (chat.waiting? ? "Confirme ou refuse d'abord l'action ci-dessus." : "#{agent.name} réfléchit…") : "Demande à #{agent.name}…",
-        data: { action: "keydown->agent-composer#keydown", shortcut: ("." if conversation) } %>
+        data: { action: "keydown->agent-composer#keydown input->agent-composer#save", agent_composer_target: "text" } %>
   <%= f.submit "Envoyer", disabled: busy %>
 <% end %>
