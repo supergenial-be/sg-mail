@@ -35,12 +35,14 @@ class MessageParser
   end
 
   # Les pièces jointes elles-mêmes restent chez le fournisseur : on ne garde que de quoi les lister.
-  # content_id relie une image intégrée au corps HTML (<img src="cid:…">).
+  # content_id relie une image intégrée au corps HTML (<img src="cid:…">) ; inline dit que l'expéditeur l'a
+  # placée dans le corps plutôt qu'en pièce jointe (toujours présent : son absence marque une ancienne liste).
   def attachments
     @mail.attachments.each_with_index.map do |part, index|
+      content_id = (clean(part.content_id)&.delete("<>").presence if part.has_content_id?)
       { "index" => index, "filename" => clean(part.filename).presence || "piece-jointe-#{index + 1}",
         "content_type" => part.mime_type, "size" => part.body.decoded.bytesize,
-        "content_id" => clean(part.content_id)&.delete("<>").presence }.compact
+        "content_id" => content_id, "inline" => part.inline? || content_id.present? }.compact
     end
   rescue StandardError
     []

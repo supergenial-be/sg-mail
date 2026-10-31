@@ -111,7 +111,8 @@ class ConversationsControllerTest < ActionDispatch::IntegrationTest
       @second.update!(body_html: %(<p><img src="cid:logo@sg"></p>), attachments: [
         { "index" => 0, "filename" => "logo.png", "content_type" => "image/png", "content_id" => "logo@sg" },
         { "index" => 1, "filename" => "programme.pdf", "content_type" => "application/pdf" },
-        { "index" => 2, "filename" => "photo.jpg", "content_type" => "image/jpeg", "content_id" => "photo@sg" },
+        { "index" => 2, "filename" => "photo.jpg", "content_type" => "image/jpeg", "size" => 2_000_000, "inline" => false },
+        { "index" => 4, "filename" => "instagram.jpg", "content_type" => "image/jpeg", "content_id" => "quoted@sg", "inline" => true },
         { "index" => 3, "filename" => "budget.xlsx", "content_type" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
       ])
     end
@@ -123,7 +124,7 @@ class ConversationsControllerTest < ActionDispatch::IntegrationTest
       assert_select "td.files a.file-chip[data-family=pdf][data-viewer-kind=pdf][data-viewer-group=?]", @conversation.id.to_s, text: /programme\.pdf/
       assert_select "td.files a.file-chip[data-viewer-kind=image]", text: /photo\.jpg/
       assert_select "td.files .file-more", "+1"
-      assert_select "td.files", text: /logo\.png/, count: 0
+      assert_select "td.files", text: /logo\.png|instagram\.jpg/, count: 0
       assert_select "dialog.viewer", 1
     end
   end
