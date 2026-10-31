@@ -2,6 +2,7 @@
 <% box = (@box unless @box == "imbox" || @stack || @archived) %>
 <% stack = @stack %>
 <% content_for :title, "#{[ box_label, @mailbox&.display_name ].compact.join(" · ")} · #{current_account.name} · SG Mail" %>
+<div class="space-top">
 <header class="space-head">
   <h1><%= box_label %><%= tag.span(" · #{@mailbox.display_name}", class: "muted", title: @mailbox.address) if @mailbox %></h1>
   <p class="tagline"><%= space_tagline(@archived ? "archived" : @stack || @box) %></p>
@@ -36,6 +37,7 @@
     <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id), class: "link",
           form: { data: { turbo_confirm: "Marquer comme lus tous les messages#{" de #{@mailbox.display_name}" if @mailbox} ?" } } %>
   </div>
+</div>
 </div>
 
 <% if @stack == "reply_later" && @conversations.any? %>
@@ -75,7 +77,7 @@
 <%# Dans la réception, comme chez Hey : ce qui est nouveau pour moi d'abord, puis ce que j'ai déjà vu. %>
 <% sections = if @box == "imbox" && !@stack && !@archived && params[:unread] != "1"
      fresh, seen = @conversations.partition(&:unread_anywhere?)
-     [ [ ("Nouveau pour toi" if fresh.any?), fresh ], [ ("Déjà vu" if fresh.any?), seen ] ]
+     [ [ ("Nouveaux messages" if fresh.any?), fresh ], [ ("Déjà vu" if fresh.any?), seen ] ]
    else
      [ [ nil, @conversations ] ]
    end %>
