@@ -139,6 +139,8 @@ module ApplicationHelper
       end
     end
 
+    return AgentAttachmentTools.fields(Current.user, action.input) if AgentAttachmentTools.handles?(action.tool_name)
+
     action.input.filter_map do |key, value|
       next if value.nil? || value == "" || !AGENT_FIELD_LABELS.key?(key)
 

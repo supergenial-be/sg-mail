@@ -37,7 +37,7 @@ class AgentRun
   def initialize(chat, base_url: nil)
     @chat = chat
     @agent = Agent.for(chat.user)
-    @toolbox = AgentToolbox.new(chat.user, base_url: base_url)
+    @toolbox = AgentToolbox.new(chat.user, base_url: base_url, chat: chat)
   end
 
   def perform

@@ -22,6 +22,17 @@ class AgentMessage < ApplicationRecord
   def tool_uses = content.select { |block| block["type"] == "tool_use" }
 
   def to_claude
-    { role: role, content: content.map { |block| BLOCK_KEYS[block["type"]]&.then { |keys| block.slice(*keys) } || block } }
+    { role: role, content: content.map { |block| with_attachments(BLOCK_KEYS[block["type"]]&.then { |keys| block.slice(*keys) } || block) } }
+  end
+
+  private
+
+  # Les pièces jointes lues par l'agent, relues depuis le cache au moment de partir chez Claude.
+  def with_attachments(block)
+    return block unless block["type"] == "tool_result" && block["content"].is_a?(Array)
+
+    block.merge("content" => block["content"].map do |part|
+      part["type"] == AgentAttachmentTools::REFERENCE ? AgentAttachmentTools.content_block(agent_chat.user, part) : part
+    end)
   end
 end
