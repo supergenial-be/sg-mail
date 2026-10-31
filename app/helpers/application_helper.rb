@@ -108,8 +108,40 @@ module ApplicationHelper
     elsif time.year == today.year then l(time, format: "%-d %b")
     else l(time.to_date, format: "%d/%m/%Y")
     end
-    tag.time(label, datetime: time.iso8601, title: l(time, format: :long))
+    tag.time(label, datetime: time.iso8601, title: "#{time_ago(time)} · #{l(time, format: :long)}", data: { ago: "long" })
   end
+
+  # Une date affichée en entier, avec « il y a 15 jours » au survol.
+  def dated(time, format: :long, **options)
+    return unless time
+
+    time = time.in_time_zone
+    tag.time(l(time, format: format), datetime: time.iso8601, title: time_ago(time), data: { ago: "" }, **options)
+  end
+
+  # Depuis quand, en français : « à l'instant », « il y a 3 heures », « hier », « il y a 15 jours », « il y a 2 mois ».
+  # Même calcul dans application.js, qui le refait au survol pour que l'info-bulle reste juste sur une page restée ouverte.
+  def time_ago(time, now: Time.zone.now)
+    time = time.in_time_zone
+    seconds = now - time
+    days = (now.to_date - time.to_date).to_i
+    months = (now.year * 12 + now.month) - (time.year * 12 + time.month)
+    months -= 1 if now.day < time.day
+
+    if seconds < 60 then "à l'instant"
+    elsif seconds < 3600 then ago_count(seconds.div(60), "minute", "minutes")
+    elsif days.zero? then ago_count(seconds.div(3600), "heure", "heures")
+    elsif days == 1 then "hier"
+    elsif months < 1 then ago_count(days, "jour", "jours")
+    elsif months < 12 then "il y a #{months} mois"
+    else ago_count(months.div(12), "an", "ans")
+    end
+  end
+
+  def ago_count(count, one, many)
+    "il y a #{count} #{count == 1 ? one : many}"
+  end
+  private :ago_count
 
   # Un rond aux initiales, à la couleur du nom.
   def avatar(name, size: nil)

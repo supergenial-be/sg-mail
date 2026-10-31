@@ -18,7 +18,7 @@
     </header>
     <% if message %>
       <p class="focus-from"><strong><%= message.from_display %></strong>
-        <span class="muted"><%= message.sent_at && l(message.sent_at, format: :long) %></span></p>
+        <span class="muted"><%= dated(message.sent_at) %></span></p>
       <div class="focus-body"><%= simple_format(message.body_text.to_s.strip.truncate(2000, separator: " ")) %></div>
     <% end %>
 

@@ -56,7 +56,7 @@
         <strong><%= message.from_display %></strong> <span class="muted">&lt;<%= message.from_address %>&gt;</span><br>
         <span class="muted">À : <%= message.to_addresses.join(", ") %><%= " · Cc : #{message.cc_addresses.join(", ")}" if message.cc_addresses.any? %></span>
       </p>
-      <time class="muted"><%= message.sent_at && l(message.sent_at, format: :long) %></time>
+      <%= dated(message.sent_at, class: "muted") %>
     </header>
 
     <% if message.body_html.present? %>
@@ -99,7 +99,7 @@
   <p class="muted">Visibles de l'équipe seulement, jamais envoyées.</p>
   <% @notes.each do |note| %>
     <div id="<%= dom_id(note) %>" class="note">
-      <p><strong><%= note.user.display_name %></strong> <span class="muted"><%= l(note.created_at, format: :short) %></span>
+      <p><strong><%= note.user.display_name %></strong> <span class="muted"><%= dated(note.created_at, format: :short) %></span>
         <% if note.user == Current.user %>
           <%= button_to "Supprimer", conversation_note_path(@conversation, note), method: :delete, class: "link muted", form: { class: "inline" } %>
         <% end %>
