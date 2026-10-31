@@ -17,12 +17,15 @@ class AgentAction < ApplicationRecord
   def label = AgentToolbox.label(tool_name)
   def result_text = result&.fetch("text", nil)
 
-  # Le résultat tel que Claude le reçoit.
+  # Le résultat tel que Claude le reçoit. Une pièce jointe lue y est un renvoi (AgentAttachmentTools::REFERENCE) :
+  # le fichier n'est jamais recopié dans la discussion, AgentMessage#to_claude le relit à chaque tour.
   def tool_result
     text = case status
     when "rejected" then "The user declined this action. Do not retry it unless they ask."
     else result_text.to_s
     end
-    { "type" => "tool_result", "tool_use_id" => tool_use_id, "content" => text, "is_error" => status.in?(%w[rejected failed]) }
+    reference = result&.dig("attachment") if done?
+    content = reference ? [ { "type" => "text", "text" => text }, reference.merge("type" => AgentAttachmentTools::REFERENCE) ] : text
+    { "type" => "tool_result", "tool_use_id" => tool_use_id, "content" => content, "is_error" => status.in?(%w[rejected failed]) }
   end
 end

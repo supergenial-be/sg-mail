@@ -11,7 +11,8 @@ class AgentToolbox
   LABELS = {
     "mark_read" => "Marquer le fil comme lu", "mark_unread" => "Marquer le fil comme non lu", "assign" => "Assigner le fil",
     "add_note" => "Ajouter une note interne", "screen_sender" => "Trier un expéditeur", "update_stacks" => "Ranger le fil",
-    "create_draft" => "Préparer un brouillon", "update_draft" => "Modifier un brouillon"
+    "create_draft" => "Préparer un brouillon", "update_draft" => "Modifier un brouillon",
+    "read_attachment" => "Lire une pièce jointe", "upload_attachment" => "Envoyer une pièce jointe"
   }.freeze
 
   def self.label(name)
@@ -23,7 +24,8 @@ class AgentToolbox
 
   def self.remote?(name) = name.to_s.include?(SEPARATOR)
 
-  def initialize(user, base_url: nil)
+  def initialize(user, base_url: nil, chat: nil)
+    @attachments = AgentAttachmentTools.new(user, chat: chat)
     @context = { actions: MailActions.new(user, via: "agent"), serializer: ApiSerializer.new(user: user, base_url: base_url) }
     @connections = IntegrationConnection.connected.where(user: user).includes(:integration).to_a
   end
@@ -43,17 +45,18 @@ class AgentToolbox
       schema = tool.input_schema_value.to_h.except(:"$schema")
       { name: tool.name_value, description: tool.description_value, input_schema: schema.merge(properties: schema[:properties].except(:account_id)) }
     end
-    local + remote.map do |name, (connection, tool)|
+    local + AgentAttachmentTools::DEFINITIONS + remote.map do |name, (connection, tool)|
       { name: name, description: "[#{connection.integration.name}] #{tool["description"]}".first(4000),
         input_schema: tool["input_schema"].to_h.except("$schema").reverse_merge("type" => "object") }
     end
   end
 
-  def known?(name) = TOOLS.key?(name) || remote.key?(name)
+  def known?(name) = TOOLS.key?(name) || AgentAttachmentTools.handles?(name) || remote.key?(name)
 
   # Un outil inconnu ou sans annotation compte comme une écriture.
   def writes?(name)
     return remote[name].nil? || !remote[name].last["read_only"] if self.class.remote?(name)
+    return name.in?(AgentAttachmentTools::WRITES) if AgentAttachmentTools.handles?(name)
 
     TOOLS[name]&.annotations_value&.read_only_hint != true
   end
@@ -66,6 +69,8 @@ class AgentToolbox
 
       return RemoteMcp.new(connection).call(tool["name"], input.to_h)
     end
+
+    return @attachments.call(name, input.to_h.stringify_keys) if AgentAttachmentTools.handles?(name)
 
     tool = TOOLS[name] or return { "text" => "Unknown tool #{name}", "error" => true }
     arguments = input.to_h.transform_keys(&:to_sym).except(:mark_read) # lire n'est pas « marquer comme lu »
