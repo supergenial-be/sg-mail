@@ -24,7 +24,23 @@
       <% if chat %>
         <%= render "agent_chats/transcript", chat: chat, agent: agent, from_conversation: true %>
       <% else %>
-        <p class="muted">Demande-lui de résumer ce fil, de proposer des actions ou de préparer une réponse.</p>
+        <% connections = IntegrationConnection.where(user: Current.user).index_by(&:integration_id) %>
+        <ul class="agent-tools">
+          <li><span class="agent-tool-dot on" aria-hidden="true"></span><strong>SG Mail</strong> <span class="muted">· ce fil et tes boîtes</span></li>
+          <% Integration.alphabetical.each do |integration| %>
+            <% connection = connections[integration.id] %>
+            <li>
+              <span class="agent-tool-dot <%= "on" if connection&.connected? %>" aria-hidden="true"></span><strong><%= integration.name %></strong>
+              <span class="muted">·
+                <% if connection&.connected? %>
+                  <%= connection.remote_identity ? "connecté en tant que #{connection.remote_identity}" : "connecté" %>
+                <% else %>
+                  <%= link_to "à connecter", integrations_path %>
+                <% end %>
+              </span>
+            </li>
+          <% end %>
+        </ul>
       <% end %>
     </div>
     <%= render "agent_chats/composer", chat: chat, conversation: conversation, agent: agent %>
