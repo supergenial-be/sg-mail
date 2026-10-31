@@ -95,7 +95,10 @@ body.bare main { max-width: 26rem; padding-top: 12vh; }
 .compose-button.hint::after { opacity: .6; margin-left: auto; }
 .compose-button svg { width: 1rem; height: 1rem; flex-shrink: 0; }
 nav.spaces { display: flex; flex-direction: column; gap: 1px; }
-.menu-toggle { display: none; }
+.menu-toggle, .drawer-backdrop { display: none; }
+/* Sur ordinateur, le tiroir s'efface : la marque et les espaces restent des éléments de la barre latérale, la marque en tête. */
+.drawer { display: contents; }
+.sidebar .brand { order: -1; }
 .nav-label { font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding: .8rem .65rem .25rem; }
 .sidebar nav a { display: flex; align-items: center; gap: .65rem; padding: .42rem .65rem; border-radius: 9px; color: var(--text);
   text-decoration: none; white-space: nowrap; transition: background .15s ease; }
@@ -617,16 +620,24 @@ dialog.shortcuts dd { margin: 0; }
     grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "menu search compose settings";
     align-items: center; gap: .3rem .5rem; padding: .5rem .75rem; padding-top: max(.5rem, env(safe-area-inset-top));
     border-right: 0; border-bottom: 1px solid var(--rule); }
-  .sidebar.open { overflow-y: auto; grid-template-areas: "menu search compose settings" "brand brand brand brand" "spaces spaces spaces spaces"; }
   .sidebar .menu-toggle { grid-area: menu; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; padding: 0; border-radius: 50%;
     border: 0; background: transparent; color: var(--ink); cursor: pointer; }
   .sidebar .menu-toggle:hover, .sidebar.open .menu-toggle { background: var(--space-soft); color: var(--space); }
   .menu-toggle svg { width: 1.3rem; height: 1.3rem; }
-  .brand { grid-area: brand; padding: .6rem .65rem .2rem; min-width: 0; border-top: 1px solid var(--rule); margin-top: .3rem; }
-  .sidebar:not(.open) .brand, .sidebar:not(.open) nav.spaces { display: none; }
+  /* Le menu, comme sur Gmail : un tiroir qui glisse depuis la gauche, par-dessus la liste, sur un voile. */
+  .drawer { display: flex; flex-direction: column; gap: .8rem; position: fixed; z-index: 40; top: 0; bottom: 0; left: 0; width: min(84vw, 20rem);
+    overflow-y: auto; overscroll-behavior: contain; padding: max(1rem, env(safe-area-inset-top)) .75rem max(1rem, env(safe-area-inset-bottom));
+    background: var(--sheet-2); border-right: 1px solid var(--rule); box-shadow: 8px 0 32px -12px rgb(0 0 0 / .35);
+    transform: translateX(-102%); visibility: hidden; transition: transform .3s var(--ease), visibility 0s linear .3s; }
+  .sidebar.open .drawer { transform: none; visibility: visible; transition: transform .3s var(--ease); }
+  .drawer-backdrop { display: block; position: fixed; z-index: 39; inset: 0; background: rgb(23 17 31 / .5); opacity: 0; pointer-events: none;
+    transition: opacity .3s ease; }
+  .sidebar.open .drawer-backdrop { opacity: 1; pointer-events: auto; }
+  body:has(.sidebar.open) { overflow: hidden; }
+  .brand { padding: .5rem .65rem .2rem; min-width: 0; }
   .compose-button { grid-area: compose; padding: .35rem .8rem; font-size: .9rem; }
   .compose-button.hint::after { display: none; }
-  nav.spaces { grid-area: spaces; padding-bottom: .5rem; }
+  nav.spaces { padding-bottom: .5rem; }
   .sidebar nav.spaces a { padding: .6rem .65rem; }
   .sidebar nav.spaces a.sub { padding: .45rem .65rem .45rem calc(1.3rem + 10px); }
   .sidebar .search { grid-area: search; }

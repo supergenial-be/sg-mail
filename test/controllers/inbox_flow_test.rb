@@ -40,7 +40,8 @@ class InboxFlowTest < ActionDispatch::IntegrationTest
   test "on a phone, spaces and mailboxes sit behind the menu button, and Filtrer beside the space title" do
     get account_root_path(account_id: @semisto.id)
     assert_select "aside.sidebar[data-controller=toggle] button.menu-toggle[aria-controls=spaces-menu][aria-expanded=false]"
-    assert_select "nav#spaces-menu a", "Feed"
+    assert_select "#spaces-menu.drawer nav.spaces a", "Feed"
+    assert_select ".drawer-backdrop[data-action=\"click->toggle#close\"]"
     assert_select ".space-top .space-head h1", "Réception"
     assert_select ".space-top .filter-bar button.filter-toggle"
   end
