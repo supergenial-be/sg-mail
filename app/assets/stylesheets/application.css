@@ -291,16 +291,17 @@ form.bulk { display: flex; flex-wrap: wrap; gap: .3rem 1rem; align-items: center
 /* La liste des fils : chaque fil est une ligne à deux étages (qui · objet et aperçu), toute la ligne ouvre le fil. */
 table.conversations { box-shadow: var(--shadow); }
 table.conversations, table.conversations tbody { display: block; }
-table.conversations tr { display: grid; grid-template-columns: 1rem minmax(0, 1fr) auto; gap: .05rem .9rem; align-items: center;
+/* Une ligne par fil, comme Gmail : qui, l'objet, la boîte, la date ; les pièces jointes dessous. */
+table.conversations tr { display: grid; grid-template-columns: 1rem minmax(0, 13rem) minmax(0, 1fr) auto auto; gap: .3rem 1.1rem; align-items: center;
   padding: .7rem 1.25rem .7rem .6rem; border-bottom: 1px solid var(--rule); position: relative; transition: background .15s ease, opacity .3s ease, transform .35s var(--ease); }
 table.conversations tr:last-child { border-bottom: 0; }
 table.conversations td { border: 0; padding: 0; min-width: 0; }
-table.conversations td.select { grid-column: 1; grid-row: 1 / span 2; }
+table.conversations td.select { grid-column: 1; grid-row: 1; }
 table.conversations td.sender { grid-column: 2; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-table.conversations td.subject { grid-column: 2; grid-row: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: .94rem; }
-table.conversations td.date { grid-column: 3; grid-row: 1; justify-self: end; font-size: .8rem; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
-table.conversations td.mailbox { grid-column: 3; grid-row: 2; justify-self: end; display: flex; gap: .8rem; }
-table.conversations td.files { grid-column: 2; grid-row: 3; display: flex; align-items: center; gap: .4rem; margin-top: .35rem; min-width: 0; }
+table.conversations td.subject { grid-column: 3; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: .94rem; }
+table.conversations td.mailbox { grid-column: 4; grid-row: 1; justify-self: end; display: flex; gap: .8rem; }
+table.conversations td.date { grid-column: 5; grid-row: 1; justify-self: end; font-size: .8rem; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.conversations td.files { grid-column: 3 / -1; grid-row: 2; display: flex; align-items: center; gap: .4rem; min-width: 0; }
 table.conversations tr:hover { background: var(--sheet-2); }
 table.conversations a { color: var(--text); text-decoration: none; }
 table.conversations td.subject a::after { content: ""; position: absolute; inset: 0; }
@@ -316,11 +317,11 @@ table.conversations td.subject:has(.excerpt) { white-space: normal; }
 .snippet.excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: .15rem;
   font-size: .9rem; line-height: 1.45; }
 .snippet.excerpt::before { content: none; }
-tr.unread td.sender { font-weight: 700; color: var(--ink); }
-tr.unread td.subject a { font-weight: 600; color: var(--ink); }
-/* Qui écrit, en Inter ; de quoi il s'agit, en Garamond, comme un titre : on distingue l'un de l'autre d'un coup d'œil. */
-table.conversations td.subject > a { font-family: var(--serif); font-size: 1.12em; font-weight: 500; letter-spacing: -.005em; color: var(--ink); }
-table.conversations td.sender { font-size: .9rem; letter-spacing: .01em; }
+/* Qui écrit : petit, espacé, discret ; de quoi il s'agit : plus grand, à l'encre. Tout en Inter, la taille et la couleur font la différence. */
+table.conversations td.sender { font-size: .86rem; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
+table.conversations td.subject > a { font-size: 1.04rem; font-weight: 500; color: var(--ink); }
+tr.unread td.sender { font-weight: 700; color: var(--text); }
+tr.unread td.subject a { font-weight: 650; color: var(--ink); }
 /* Non lu : l'heure prend la couleur de l'espace, suivie d'un point. */
 tr.unread td.date { color: var(--space); font-weight: 650; }
 tr.unread td.date::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: .4rem; border-radius: 50%; background: var(--space); }
@@ -681,13 +682,14 @@ dialog.shortcuts dd { margin: 0; }
   .filter-bar .filters { margin-top: .5rem; gap: .35rem; }
   table.conversations { margin: 0 -1rem; width: auto; border-radius: 0; box-shadow: none; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
   table.conversations tr { grid-template-columns: 0 minmax(0, 1fr) auto; gap: .1rem .8rem; padding: .75rem 1rem .75rem .25rem; }
+  table.conversations td.select { grid-row: 1 / span 2; }
+  table.conversations td.date { grid-column: 3; }
   table.conversations td.select input { display: none; }
   table.conversations td.mailbox { display: none; }
-  table.conversations td.subject { grid-column: 2 / -1; white-space: normal; }
-  table.conversations td.subject > a, table.conversations td.subject .snippet:not(.excerpt) { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  table.conversations td.subject .snippet:not(.excerpt) { margin-top: .05rem; font-size: .9rem; }
+  table.conversations td.subject { grid-column: 2 / -1; grid-row: 2; white-space: normal; }
+  table.conversations td.subject > a { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   table.conversations td.subject .snippet::before { content: none; }
-  table.conversations td.files { grid-column: 2 / -1; }
+  table.conversations td.files { grid-column: 2 / -1; grid-row: 3; margin-top: .35rem; }
   table.conversations tr.current::before { display: none; }
   form.bulk { display: none; }
   table:not(.conversations) { display: block; overflow-x: auto; }

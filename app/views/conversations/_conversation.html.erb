@@ -14,8 +14,8 @@
       <%= link_to highlight_words(conversation.title, highlights), conversation_path(conversation), data: { shortcuts_target: "link" } %>
       <span class="snippet excerpt"><%= search_excerpt(local_assigns[:match], highlights, fallback: conversation.snippet) %></span>
     <% else %>
+      <%# Comme Gmail : qui et de quoi il s'agit, sans le début du message. %>
       <%= link_to conversation.title, conversation_path(conversation), data: { shortcuts_target: "link" } %>
-      <span class="snippet"><%= conversation.snippet&.truncate(140) %></span>
     <% end %>
   </td>
   <% if attachments.any? %>
