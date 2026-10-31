@@ -1,19 +1,32 @@
-<%# L'agent dans un fil : la dernière discussion née de ce fil, ou de quoi en commencer une. %>
-<section class="card agent-panel" id="agent" style="--agent: var(--<%= agent.color %>)">
-  <% if chat %>
-    <%= turbo_stream_from chat %>
-  <% end %>
-  <header class="agent-panel-head">
-    <%= agent_avatar(agent) %>
-    <h2><%= agent.name %></h2>
+<%# L'agent dans un fil, à la Intercom : une bulle en bas à droite ouvre un tiroir sur la droite, avec la dernière
+    discussion née de ce fil (ou de quoi en commencer une). Masquer le tiroir ne perd ni la discussion ni ce qui
+    est en cours d'écriture (agent_drawer_controller.js). %>
+<div class="agent-dock" data-controller="agent-drawer" data-action="keydown@document->agent-drawer#key" style="--agent: var(--<%= agent.color %>)">
+  <button type="button" class="agent-launcher <%= "busy" if chat&.running? %> <%= "waiting" if chat&.waiting? %>"
+          data-action="agent-drawer#open" data-shortcut="." aria-controls="agent" aria-expanded="false"
+          title="<%= chat&.waiting? ? "#{agent.name} attend ta confirmation" : "Demander à #{agent.name}" %>">
+    <%= agent_avatar(agent) %><span class="visually-hidden">Ouvrir <%= agent.name %></span>
+  </button>
+
+  <aside class="card agent-panel agent-drawer" id="agent" aria-label="<%= agent.name %>" data-agent-drawer-target="drawer">
     <% if chat %>
-      <span class="muted"><%= link_to "Plein écran", agent_chat_path(chat) %> · <%= button_to "Nouvelle discussion", agent_chats_path, params: { conversation_id: conversation.id, prompt: "Que suggères-tu ?" }, class: "link", form: { class: "inline" } %></span>
+      <%= turbo_stream_from chat %>
     <% end %>
-  </header>
-  <% if chat %>
-    <%= render "agent_chats/transcript", chat: chat, agent: agent, from_conversation: true %>
-  <% else %>
-    <p class="muted">Demande-lui de résumer ce fil, de proposer des actions ou de préparer une réponse.</p>
-  <% end %>
-  <%= render "agent_chats/composer", chat: chat, conversation: conversation, agent: agent %>
-</section>
+    <header class="agent-panel-head">
+      <%= agent_avatar(agent) %>
+      <h2><%= agent.name %></h2>
+      <button type="button" class="link agent-drawer-close" data-action="agent-drawer#close" title="Masquer (Échap)">Masquer</button>
+      <% if chat %>
+        <span class="muted"><%= link_to "Plein écran", agent_chat_path(chat) %> · <%= button_to "Nouvelle discussion", agent_chats_path, params: { conversation_id: conversation.id, prompt: "Que suggères-tu ?" }, class: "link", form: { class: "inline" } %></span>
+      <% end %>
+    </header>
+    <div class="agent-drawer-body" data-agent-drawer-target="body">
+      <% if chat %>
+        <%= render "agent_chats/transcript", chat: chat, agent: agent, from_conversation: true %>
+      <% else %>
+        <p class="muted">Demande-lui de résumer ce fil, de proposer des actions ou de préparer une réponse.</p>
+      <% end %>
+    </div>
+    <%= render "agent_chats/composer", chat: chat, conversation: conversation, agent: agent %>
+  </aside>
+</div>
