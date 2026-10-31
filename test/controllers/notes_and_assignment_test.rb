@@ -28,6 +28,33 @@ class NotesAndAssignmentTest < ActionDispatch::IntegrationTest
     assert_select "table.conversations tr", 0
   end
 
+  test "a thread assigned to me stays at the top of the inbox, even under newer mail, until I archive it" do
+    with_account(@semisto) do
+      @conversation.update!(assignee: users(:michael))
+      @mailbox.messages.create!(provider_uid: "b", thread_key: "t2", subject: "Plus récent", from_address: "anne@example.org",
+        sent_at: 1.hour.ago, body_text: "Re", labels: %w[INBOX])
+      Conversation.rebuild_for(@mailbox)
+    end
+
+    sign_in_as users(:michael)
+    get conversations_path(account_id: @semisto.id)
+    assert_select "h2.list-section.assigned", text: "Assignés à moi"
+    assert_select "h2.list-section.assigned + table.conversations tr", 1
+    assert_select "h2.list-section.assigned + table.conversations a", text: "Inscription"
+    assert_select "table.conversations a", text: "Inscription", count: 1
+
+    sign_in_as users(:mohammad)
+    get conversations_path(account_id: @semisto.id)
+    assert_select "h2.list-section.assigned", 0
+    assert_select "table.conversations a", text: "Inscription", count: 1
+
+    sign_in_as users(:michael)
+    patch archive_conversation_path(@conversation, account_id: @semisto.id)
+    get conversations_path(account_id: @semisto.id)
+    assert_select "h2.list-section.assigned", 0
+    assert_select "table.conversations a", text: "Inscription", count: 0
+  end
+
   test "internal notes: visible to the team, deletable by their author only" do
     sign_in_as users(:michael)
     post conversation_notes_path(@conversation, account_id: @semisto.id), params: { note: { body: "Elle a déjà payé." } }
