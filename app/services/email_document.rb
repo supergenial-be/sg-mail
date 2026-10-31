@@ -91,7 +91,8 @@ class EmailDocument
         html.sg-plain blockquote { border-color: #43395a; color: #a59db1; }
         html.sg-plain hr { border-top-color: #43395a; }
         html.sg-plain :is([style*='color'], font[color]):not(a) { color: inherit !important; }
-        html.sg-designed body { background: #fff; }
+        /* La feuille claire a besoin d'une marge : sans elle, le texte colle au bord. */
+        html.sg-designed body { background: #fff; padding: clamp(12px, 3vw, 22px) clamp(14px, 4vw, 26px); }
       }
     CSS
   end

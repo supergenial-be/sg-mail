@@ -27,6 +27,7 @@ class EmailDocumentTest < ActiveSupport::TestCase
     assert_includes plain.to_html, %(content="light dark")
     assert designed.designed?
     assert_includes designed.to_html, %(class="sg-designed")
+    assert_match(/html\.sg-designed body \{ background: #fff; padding: /, designed.to_html)
     assert EmailDocument.new(%(<div style="background-color: #fde">x</div>)).designed?
     assert_not EmailDocument.new(%(<div style="background: transparent">x</div>)).designed?
   end
