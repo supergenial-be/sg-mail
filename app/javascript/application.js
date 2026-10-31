@@ -31,3 +31,31 @@ document.addEventListener("click", (event) => {
     if (!details.contains(event.target)) details.open = false
   })
 })
+
+// « il y a 15 jours » au survol d'une date : recalculé à ce moment, pour rester juste sur une page restée ouverte.
+// Même calcul que time_ago (ApplicationHelper).
+const agoCount = (count, one, many) => `il y a ${count} ${count === 1 ? one : many}`
+function timeAgo(time, now = new Date()) {
+  const seconds = (now - time) / 1000
+  const day = (date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  const days = Math.round((day(now) - day(time)) / 86400000)
+  let months = (now.getFullYear() * 12 + now.getMonth()) - (time.getFullYear() * 12 + time.getMonth())
+  if (now.getDate() < time.getDate()) months -= 1
+
+  if (seconds < 60) return "à l'instant"
+  if (seconds < 3600) return agoCount(Math.floor(seconds / 60), "minute", "minutes")
+  if (days === 0) return agoCount(Math.floor(seconds / 3600), "heure", "heures")
+  if (days === 1) return "hier"
+  if (months < 1) return agoCount(days, "jour", "jours")
+  if (months < 12) return `il y a ${months} mois`
+  return agoCount(Math.floor(months / 12), "an", "ans")
+}
+document.addEventListener("pointerover", (event) => {
+  const element = event.target.closest?.("time[data-ago][datetime]")
+  if (!element) return
+  const time = new Date(element.getAttribute("datetime"))
+  if (Number.isNaN(time.getTime())) return
+  const ago = timeAgo(time)
+  const title = element.title
+  element.title = element.dataset.ago === "long" && title.includes(" · ") ? `${ago} · ${title.split(" · ").slice(1).join(" · ")}` : ago
+})

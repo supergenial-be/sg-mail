@@ -12,7 +12,7 @@
         <%= link_to chat.title.presence || "Discussion", agent_chat_path(chat) %>
         <span class="muted">
           <%= "· #{chat.conversation.title}" if chat.conversation %>
-          · <%= l(chat.updated_at, format: :short) %>
+          · <%= dated(chat.updated_at, format: :short) %>
           <%= "· attend ta confirmation" if chat.waiting? %>
         </span>
       </li>
