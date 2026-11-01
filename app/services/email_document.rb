@@ -1,5 +1,5 @@
 # Prépare le corps HTML d'un email pour l'iframe du fil, pour qu'il se fonde dans SG Mail :
-# - une feuille de style de base (Inter, encre et papier, mode sombre) placée AVANT celles de l'expéditeur,
+# - une feuille de style de base (Geist, encre et papier, mode sombre) placée AVANT celles de l'expéditeur,
 #   avec une spécificité nulle (:where) : la mise en forme voulue par l'expéditeur garde toujours la main ;
 # - un email « composé » (fonds de couleur, newsletter) reste sur une feuille claire en mode sombre,
 #   un email « simple » (écrit dans Gmail, Outlook…) prend les couleurs de l'app ;
@@ -74,22 +74,22 @@ class EmailDocument
 
   def stylesheet
     <<~CSS.squish
-      #{"@font-face { font-family: 'Inter'; font-weight: 400 700; font-display: swap; src: url('#{@font_url}') format('woff2'); }" if @font_url}
+      #{"@font-face { font-family: 'Geist'; font-weight: 100 900; font-display: swap; src: url('#{@font_url}') format('woff2'); }" if @font_url}
       :where(html) { color-scheme: #{designed? ? "light" : "light dark"}; }
-      :where(body) { margin: 0; padding: 0; font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
-        font-size: 15px; line-height: 1.6; color: #24202c; background: transparent; overflow-wrap: break-word; }
-      :where(a) { color: #7b4fc9; }
+      :where(body) { margin: 0; padding: 0; font-family: Geist, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        font-size: 15px; line-height: 1.6; color: #1a1a1a; background: transparent; overflow-wrap: break-word; }
+      :where(a) { color: #6b3fa0; }
       :where(img) { max-width: 100%; height: auto; }
-      :where(blockquote) { margin: .6em 0; padding: 0 0 0 1em; border-left: 2px solid #e6dfcf; color: #6f6878; }
+      :where(blockquote) { margin: .6em 0; padding: 0 0 0 1em; border-left: 2px solid #ddd6c8; color: #5e5a53; }
       :where(pre, code) { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .9em; white-space: pre-wrap; }
-      :where(hr) { border: 0; border-top: 1px solid #e6dfcf; }
+      :where(hr) { border: 0; border-top: 1px solid #ddd6c8; }
       .sg-quote { display: none !important; }
       html.sg-show-quote .sg-quote { display: revert !important; }
       @media (prefers-color-scheme: dark) {
-        html.sg-plain body { color: #e7e2ee; }
-        html.sg-plain a { color: #b593ee !important; }
-        html.sg-plain blockquote { border-color: #43395a; color: #a59db1; }
-        html.sg-plain hr { border-top-color: #43395a; }
+        html.sg-plain body { color: #f7f3ea; }
+        html.sg-plain a { color: #c8adf0 !important; }
+        html.sg-plain blockquote { border-color: #3a3833; color: #aaa59b; }
+        html.sg-plain hr { border-top-color: #3a3833; }
         html.sg-plain :is([style*='color'], font[color]):not(a) { color: inherit !important; }
         /* La feuille claire a besoin d'une marge : sans elle, le texte colle au bord. */
         html.sg-designed body { background: #fff; padding: clamp(12px, 3vw, 22px) clamp(14px, 4vw, 26px); }

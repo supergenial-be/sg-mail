@@ -1,6 +1,6 @@
 module ApplicationHelper
   # Couleurs des avatars et des pastilles de boîte : toujours la même pour un même nom.
-  TINTS = %w[#7b4fc9 #b0603a #2f7d6d #5b5781 #a06a26 #3d6a8c #8c4a6b #4c7a57].freeze
+  TINTS = %w[#6b3fa0 #b0603a #2f7d6d #5b5781 #a06a26 #3d6a8c #8c4a6b #4c7a57].freeze
 
   # Chaque espace a sa couleur (voir application.css) ; la page la reprend pour ses accents.
   SPACES = { "imbox" => "imbox", "feed" => "feed", "paper_trail" => "trail", "reply_later" => "later", "set_aside" => "aside" }.freeze

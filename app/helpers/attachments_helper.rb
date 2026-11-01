@@ -41,6 +41,6 @@ module AttachmentsHelper
 
   # Le corps prêt pour l'iframe du fil, habillé aux couleurs de SG Mail (voir EmailDocument).
   def email_document(message)
-    EmailDocument.new(message_body_html(message), font_url: asset_path("inter.woff2"))
+    EmailDocument.new(message_body_html(message), font_url: asset_path("geist.woff2"))
   end
 end

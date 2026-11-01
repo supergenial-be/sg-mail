@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-title" content="SG Mail">
     <%# Sur téléphone, la barre du navigateur prend la teinte du client, comme l'en-tête. %>
     <meta name="theme-color" content="<%= Current.account&.color_palette&.dig(:light) || "#f7f3ea" %>" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="<%= Current.account&.color_palette&.dig(:dark) || "#17111f" %>" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="<%= Current.account&.color_palette&.dig(:dark) || "#1a1a1a" %>" media="(prefers-color-scheme: dark)">
     <meta name="application-name" content="SG Mail">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
@@ -21,8 +21,7 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%= preload_link_tag "inter.woff2", as: "font", type: "font/woff2", crossorigin: "anonymous" %>
-    <%= preload_link_tag "eb-garamond.woff2", as: "font", type: "font/woff2", crossorigin: "anonymous" %>
+    <%= preload_link_tag "geist.woff2", as: "font", type: "font/woff2", crossorigin: "anonymous" %>
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
