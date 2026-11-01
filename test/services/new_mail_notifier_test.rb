@@ -36,7 +36,7 @@ class NewMailNotifierTest < ActiveSupport::TestCase
     assert_equal 1, @sent.size
     payload = @sent.first[:payload]
     assert_equal "Anne", payload["title"]
-    assert_equal "Inscription\nBonjour…", payload["body"]
+    assert_equal "Inscription", payload["body"]
     conversation = @mailbox.conversations.find_by!(subject: "Inscription")
     assert_equal "/#{@mailbox.account_id}/conversations/#{conversation.id}", payload["url"]
     assert_equal 2, payload["badge"]
@@ -80,5 +80,17 @@ class NewMailNotifierTest < ActiveSupport::TestCase
     NewMailNotifier.new(@mailbox, since: @since).call
 
     assert_not PushSubscription.exists?(@phone.id)
+  end
+
+  test "shows only the sender and the subject, without HTML entities" do
+    receive("1", from: "anne@example.org", subject: "GREENWEEKS&nbsp;jsq -60%")
+    @mailbox.messages.update_all(snippet: "&nbsp;&nbsp;&nbsp;Bonjour")
+    Conversation.rebuild_for(@mailbox)
+
+    NewMailNotifier.new(@mailbox, since: @since).call
+
+    payload = @sent.first[:payload]
+    assert_equal "Anne", payload["title"]
+    assert_equal "GREENWEEKS jsq -60%", payload["body"]
   end
 end

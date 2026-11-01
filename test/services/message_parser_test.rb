@@ -36,4 +36,9 @@ class MessageParserTest < ActiveSupport::TestCase
 
     assert_equal %(J'ai "peut-être" une idée), attrs[:snippet]
   end
+
+  test "l'aperçu décode toutes les entités, &nbsp; compris, sans toucher aux chevrons" do
+    assert_equal "GREENWEEKS -60% Bonjour", MessageParser.snippet("GREENWEEKS&nbsp;-60%&nbsp;&nbsp;&nbsp; Bonjour&#160;")
+    assert_equal "Écrire à <anne@example.org> & co", MessageParser.snippet("&Eacute;crire &agrave; <anne@example.org> &amp; co")
+  end
 end
