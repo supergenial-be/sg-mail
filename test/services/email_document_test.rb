@@ -8,13 +8,13 @@ class EmailDocumentTest < ActiveSupport::TestCase
   HTML
 
   test "the base stylesheet comes first and cannot outweigh the sender's styles" do
-    html = EmailDocument.new("<html><head><style>body { font-family: Georgia }</style></head><body>Salut</body></html>", font_url: "/assets/inter.woff2").to_html
+    html = EmailDocument.new("<html><head><style>body { font-family: Georgia }</style></head><body>Salut</body></html>", font_url: "/assets/geist.woff2").to_html
     document = Nokogiri::HTML5(html)
     styles = document.css("head style")
 
     assert_equal 2, styles.size
-    assert_includes styles.first.text, ":where(body) { margin: 0; padding: 0; font-family: Inter"
-    assert_includes styles.first.text, "url('/assets/inter.woff2')"
+    assert_includes styles.first.text, ":where(body) { margin: 0; padding: 0; font-family: Geist"
+    assert_includes styles.first.text, "url('/assets/geist.woff2')"
     assert_includes styles.last.text, "Georgia"
   end
 
