@@ -54,16 +54,19 @@ class NewMailNotifier
         .where.not(mailbox_id: mailbox.id).where(created_at: ...message.created_at).exists?
   end
 
+  # L'expéditeur et l'objet seulement : le début du message n'apparaît pas sur l'écran verrouillé.
   def single(message)
-    { title: message.from_display.to_s, body: [ message.conversation.title, message.snippet ].compact_blank.join("\n"),
+    { title: plain(message.from_display), body: plain(message.conversation.title),
       url: routes.conversation_path(message.conversation, account_id: mailbox.account_id), tag: "conversation-#{message.conversation.root_message_id || message.conversation_id}" }
   end
 
   def grouped(messages)
-    senders = messages.map(&:from_display).uniq
+    senders = messages.map { |message| plain(message.from_display) }.uniq
     { title: "#{messages.size} nouveaux messages", body: "De #{senders.first(4).to_sentence}#{" et d'autres" if senders.size > 4}",
       url: routes.account_root_path(account_id: mailbox.account_id), tag: "mailbox-#{mailbox.id}" }
   end
+
+  def plain(text) = MessageParser.decode_entities(text).squish
 
   def routes = Rails.application.routes.url_helpers
 end

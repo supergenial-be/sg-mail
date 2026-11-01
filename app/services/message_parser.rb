@@ -7,7 +7,13 @@ class MessageParser
   # Aperçu en texte brut, sans entités HTML : Gmail fournit le sien échappé (J&#39;ai, &quot;…&quot;),
   # et la vue l'échapperait une seconde fois.
   def self.snippet(text)
-    CGI.unescapeHTML(text.to_s).squish.truncate(SNIPPET_LENGTH).presence
+    decode_entities(text).squish.truncate(SNIPPET_LENGTH).presence
+  end
+
+  # Décode toutes les entités HTML nommées ou numériques (&nbsp;, &eacute;, &#39;…), sans toucher au reste :
+  # un « <adresse@exemple.org> » dans du texte brut reste tel quel.
+  def self.decode_entities(text)
+    text.to_s.gsub(/&(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#[xX][0-9a-fA-F]+);/) { |entity| Nokogiri::HTML5.fragment(entity).text }
   end
 
   def initialize(raw)
