@@ -83,7 +83,7 @@ gem "acts_as_tenant"
 gem "rails-i18n"
 
 # Serveur MCP (/mcp) pour Claude
-gem "mcp", "~> 1.8"
+gem "mcp", "~> 1.9"
 
 gem "webauthn", "~> 3.5"
 
