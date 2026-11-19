@@ -6,7 +6,7 @@ Super Génial Mail : client mail multi-boîtes et multi-utilisateurs pour les cl
 
 ## Lancer en local
 
-Prérequis : Ruby 3.4.10 (`.ruby-version` et `.tool-versions` pour asdf), PostgreSQL.
+Prérequis : Ruby 3.4.13 (`.ruby-version` et `.tool-versions` pour asdf), PostgreSQL.
 
 ```sh
 bin/setup --skip-server
